@@ -15,7 +15,7 @@
           <div class="max-w-xs">
             <label for="wallet" class="block text-sm font-medium text-gray-700">Ticker</label>
             <div class="mt-1 relative rounded-md shadow-md">
-              <input v-model="ticker" type="text" name="wallet" id="wallet"
+              <input v-model="ticker" @keydown.enter="addCard()" type="text" name="wallet" id="wallet"
                 class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
                 placeholder="For example DOGE" />
             </div>
@@ -60,7 +60,7 @@
         <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div @click="selectTicker(card)" v-for="(card, idx) in tickers" :key="idx"
             class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
-            :class="{ 'border-4': selectTicker == card }">
+            :class="{ 'border-4': selectedTicker == card }">
 
             <div class="px-4 py-5 sm:p-6 text-center">
               <dt class="text-sm font-medium text-gray-500 truncate">
