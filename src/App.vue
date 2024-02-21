@@ -15,7 +15,8 @@
           <div class="max-w-xs">
             <label for="wallet" class="block text-sm font-medium text-gray-700">Ticker</label>
             <div class="mt-1 relative rounded-md shadow-md">
-              <input v-model="ticker" @keydown.enter="addCard()" type="text" name="wallet" id="wallet"
+              <input @input="filter = ''" v-model="ticker" @keydown.enter="addCard()" type="text" name="wallet"
+                id="wallet"
                 class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
                 placeholder="For example DOGE" />
             </div>
@@ -53,12 +54,13 @@
           </svg>
           Add
         </button>
+        <div class="">Filter: <input v-model="filter" class=" px-1" /></div>
       </section>
       {{ selectedTicker }}
       <div v-show="tickers.length !== 0">
         <hr class="w-full border-t border-gray-600 my-4" />
         <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
-          <div @click="selectTicker(card)" v-for="(card, idx) in tickers" :key="idx"
+          <div @click="selectTicker(card)" v-for="(card, idx) in filteredTickers()" :key="idx"
             class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
             :class="{ 'border-4': selectedTicker == card }">
 
@@ -115,12 +117,24 @@ export default {
     return {
       ticker: '',
       tickers: [],
-      selectedTicker: null
+      selectedTicker: null,
+      filter: ''
+
     }
   },
   methods: {
+    filteredTickers() {
+      return this.tickers.filter(ticker => ticker.name.includes(this.filter))
+    },
     selectTicker(t) {
       this.selectedTicker = t
+    },
+    created() {
+      const storageTickers = localStorage.getItem("crypto-list")
+      console.log(storageTickers)
+      if (storageTickers) {
+        this.tickers = storageTickers
+      }
     },
     addCard() {
       if (this.ticker.length === 0) {
@@ -132,8 +146,13 @@ export default {
         price: "-"
       }
 
+
       this.tickers.push(newTicker)
+
+      localStorage.setItem("crypto-list", JSON.stringify(this.tickers))
+
       this.ticker = ''
+      this.filter = ''
     },
     deleteCard(tickerToDelete) {
       this.tickers = this.tickers.filter(t => t !== tickerToDelete)
