@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto flex flex-col items-center bg-gray-100 p-4">
-    <div v-if="false" class="fixed w-100 h-100 opacity-80 bg-purple-800 inset-0 z-50 flex items-center justify-center">
+    <div v-if="!dataIsLoaded" class="fixed w-100 h-100  bg-purple-800 inset-0 z-50 flex items-center justify-center">
       <svg class="animate-spin -ml-1 mr-3 h-12 w-12 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
         viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -15,8 +15,7 @@
           <div class="max-w-xs">
             <label for="wallet" class="block text-sm font-medium text-gray-700">Ticker</label>
             <div class="mt-1 relative rounded-md shadow-md">
-              <input @input="filter = ''" v-model="ticker" @keydown.enter="addCard()" type="text" name="wallet"
-                id="wallet"
+              <input @input="fuseSearch" v-model="ticker" @keydown.enter="addCard()" type="text" name="wallet" id="wallet"
                 class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
                 placeholder="For example DOGE" />
             </div>
@@ -56,8 +55,7 @@
         </button>
         <div class="">Filter: <input v-model="filter" class=" px-1" /></div>
       </section>
-      {{ selectedTicker }}
-      <div v-show="tickers.length !== 0">
+      <div v-show="filteredTickers().length !== 0">
         <hr class="w-full border-t border-gray-600 my-4" />
         <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div @click="selectTicker(card)" v-for="(card, idx) in filteredTickers()" :key="idx"
@@ -66,7 +64,7 @@
 
             <div class="px-4 py-5 sm:p-6 text-center">
               <dt class="text-sm font-medium text-gray-500 truncate">
-                {{ card.name }}
+                {{ card.name }} - USD
               </dt>
               <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ card.price }}</dd>
             </div>
@@ -87,7 +85,7 @@
       </div>
       <section v-if="selectedTicker" class="relative">
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
-          {{ selectedTicker.name }}
+          {{ selectedTicker.name }} - USD
         </h3>
         <div class="flex items-end border-gray-600 border-b border-l h-64">
           <div class="bg-purple-800 border w-10 h-24"></div>
@@ -112,30 +110,55 @@
 </template>
 
 <script>
+import { getAllCurrencyList } from './api.js'
+import Fuse from 'fuse.js'
+
 export default {
   data() {
     return {
       ticker: '',
       tickers: [],
       selectedTicker: null,
-      filter: ''
+      filter: '',
+      page: 1,
+      dataIsLoaded: false,
+      fuse: null,
+      fuseSearchData: []
 
     }
   },
+  created() {
+    const storageTickers = JSON.parse(localStorage.getItem("crypto-list"))
+
+    if (storageTickers) {
+      this.tickers = storageTickers
+    }
+
+
+
+  },
+  mounted() {
+    getAllCurrencyList().then((data) => {
+      let structuredData = [];
+
+
+    })
+  },
+  computed: {
+    invalidTikcer() {
+      if (this.tickers.includes(this.ticker)) { return "True" }
+    }
+  },
   methods: {
+
     filteredTickers() {
-      return this.tickers.filter(ticker => ticker.name.includes(this.filter))
+      return this.tickers.filter(t => t.name.includes(this.filter))
     },
     selectTicker(t) {
       this.selectedTicker = t
     },
-    created() {
-      const storageTickers = localStorage.getItem("crypto-list")
-      console.log(storageTickers)
-      if (storageTickers) {
-        this.tickers = storageTickers
-      }
-    },
+
+
     addCard() {
       if (this.ticker.length === 0) {
         return
@@ -157,9 +180,17 @@ export default {
     deleteCard(tickerToDelete) {
       this.tickers = this.tickers.filter(t => t !== tickerToDelete)
     }
+  },
+  watch: {
+    filter() {
+      this.page = 1
+    },
+    page() { }
+  },
 
-  }
 }
+
+
 </script>
 
 <style></style>
