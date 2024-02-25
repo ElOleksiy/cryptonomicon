@@ -15,29 +15,21 @@
           <div class="max-w-xs">
             <label for="wallet" class="block text-sm font-medium text-gray-700">Ticker</label>
             <div class="mt-1 relative rounded-md shadow-md">
-              <input @input="fuseSearch" v-model="ticker" @keydown.enter="addCard()" type="text" name="wallet" id="wallet"
+              <input @input="tickerInputHandler" v-model="ticker" @keydown.enter="addCard()" type="text" name="wallet"
+                id="wallet"
                 class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
                 placeholder="For example DOGE" />
             </div>
-            <div class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">
-              <span
+
+            <div v-if="fuseData.length" class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">
+              <span @click="addCard(searchItem.item.name)" v-for="(searchItem, idx) in fuseData" :key="idx"
                 class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-                BTC
+                {{ searchItem.item.name }}
               </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-                DOGE
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-                BCH
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-                CHD
-              </span>
+
             </div>
-            <div class="text-sm text-red-600">This ticker is already add</div>
+            <div v-show="validTickerName" class="text-sm text-red-600">This ticker is already add
+            </div>
           </div>
         </div>
 
@@ -53,7 +45,13 @@
           </svg>
           Add
         </button>
-        <div class="">Filter: <input v-model="filter" class=" px-1" /></div>
+        <div>Filter: <input v-model="filter" class=" px-1" /></div>
+        <div><button class=" mx-5 my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4
+        font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Next</button><button class=" my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4
+        font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Prev</button>
+        </div>
       </section>
       <div v-show="filteredTickers().length !== 0">
         <hr class="w-full border-t border-gray-600 my-4" />
@@ -122,8 +120,9 @@ export default {
       filter: '',
       page: 1,
       dataIsLoaded: false,
-      fuse: null,
-      fuseSearchData: []
+      fuseHandler: null,
+      fuseData: []
+
 
     }
   },
@@ -141,31 +140,55 @@ export default {
     getAllCurrencyList().then((data) => {
       let structuredData = [];
 
+      for (let key in data.Data) {
+        structuredData.push({
+          name: key,
+        });
+      }
 
+      this.fuseHandler = new Fuse(structuredData, {
+        keys: ["name"],
+        includeScore: true,
+      });
+
+
+      this.dataIsLoaded = true
     })
   },
   computed: {
-    invalidTikcer() {
-      if (this.tickers.includes(this.ticker)) { return "True" }
+    validTickerName() {
+      return this.tickers.some(ticker => ticker.name === this.ticker);
+
     }
   },
   methods: {
+    tickerInputHandler() {
 
+      const result = this.fuseHandler.search(this.ticker).sort((a, b) => a.score - b.score).slice(1, 5)
+
+
+      this.filter = ''
+      this.fuseData = result
+      console.log(result)
+
+    },
     filteredTickers() {
-      return this.tickers.filter(t => t.name.includes(this.filter))
+      return this.tickers.filter(t => t && t.name && t.name.includes(this.filter))
     },
     selectTicker(t) {
       this.selectedTicker = t
     },
 
 
-    addCard() {
+    addCard(t) {
       if (this.ticker.length === 0) {
         return
       }
-
+      if (this.validTickerName) {
+        return
+      }
       const newTicker = {
-        name: this.ticker,
+        name: t || this.ticker,
         price: "-"
       }
 
@@ -173,9 +196,9 @@ export default {
       this.tickers.push(newTicker)
 
       localStorage.setItem("crypto-list", JSON.stringify(this.tickers))
-
       this.ticker = ''
       this.filter = ''
+      this.fuseData = []
     },
     deleteCard(tickerToDelete) {
       this.tickers = this.tickers.filter(t => t !== tickerToDelete)
