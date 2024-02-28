@@ -46,11 +46,12 @@
           Add
         </button>
         <div>Filter: <input v-model="filter" class=" px-1" /></div>
-        <div><button class=" mx-5 my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4
+        <div><button @click="page--" class=" mx-5 my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4
         font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300
-        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Next</button><button class=" my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Prev</button><button @click="page++"
+            class=" my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4
         font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300
-        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Prev</button>
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Next</button>
         </div>
       </section>
       <div v-show="filteredTickers().length !== 0">
@@ -164,16 +165,20 @@ export default {
   methods: {
     tickerInputHandler() {
 
-      const result = this.fuseHandler.search(this.ticker).sort((a, b) => a.score - b.score).slice(1, 5)
+      this.fuseData = this.fuseHandler.search(this.ticker).sort((a, b) => a.score - b.score).slice(1, 5)
 
 
-      this.filter = ''
-      this.fuseData = result
-      console.log(result)
+
+
+
 
     },
     filteredTickers() {
-      return this.tickers.filter(t => t && t.name && t.name.includes(this.filter))
+
+      const start = (this.page - 1) * 6
+      const end = this.page * 6 - 1
+
+      return this.tickers.filter(t => t && t.name && t.name.includes(this.filter)).slice(start, end)
     },
     selectTicker(t) {
       this.selectedTicker = t
@@ -205,8 +210,10 @@ export default {
     }
   },
   watch: {
+
     filter() {
       this.page = 1
+
     },
     page() { }
   },

@@ -5,3 +5,7 @@ const API_KEY =
   fetch(`https://min-api.cryptocompare.com/data/all/coinlist`).then((res) =>
     res.json()
   );
+
+  const websocket = new WebSocket('wss://streamer.cryptocompare.com/v2')
+
+  
