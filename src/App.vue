@@ -47,10 +47,10 @@
         </button>
         <div>Filter: <input v-model="filter" class=" px-1" /></div>
         <div class="flex gap-2">
-          <button v-if="page > 1" @click="page--" class=" my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4
+          <button v-show="page => 1" @click="page > 1 ? page-- : null" class=" my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4
         font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300
         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Prev</button>
-          <button v-if="hasNextPage" @click="page++" class=" my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4
+          <button v-show="hasNextPage" @click="page++" class=" my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4
         font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300
         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Next</button>
         </div>
@@ -228,16 +228,13 @@ export default {
       }
 
       if (this.invalidTickerName()) {
-        console.log("this shit work")
-        console.log("work")
 
         this.tickerIsAlreadyExist = true
         return
       }
 
       if (t && this.invalidTickerName(t)) {
-        console.log(this.invalidTickerName(t))
-        console.log("work")
+
         this.ticker = t
         this.tickerIsAlreadyExist = true
         return
