@@ -28,7 +28,7 @@
               </span>
 
             </div>
-            <div v-show="validTickerName" class="text-sm text-red-600">This ticker is already add
+            <div v-show="tickerIsAlreadyExist" class="text-sm text-red-600">This ticker is already add
             </div>
           </div>
         </div>
@@ -125,7 +125,7 @@ export default {
       dataIsLoaded: false,
       fuseHandler: null,
       fuseData: [],
-
+      tickerIsAlreadyExist: false
 
     }
   },
@@ -170,10 +170,7 @@ export default {
     })
   },
   computed: {
-    validTickerName() {
-      return this.tickers.some(ticker => ticker.name === this.ticker);
 
-    },
     filteredTickers() {
 
       return this.tickers.filter(t => t && t.name && t.name.includes(this.filter))
@@ -208,7 +205,10 @@ export default {
   },
   methods: {
     tickerInputHandler() {
-
+      this.ticker = this.ticker.toUpperCase()
+      if (this.tickerIsAlreadyExist) {
+        this.tickerIsAlreadyExist = false
+      }
       this.fuseData = this.fuseHandler.search(this.ticker).sort((a, b) => a.score - b.score).slice(1, 5)
 
     },
@@ -216,15 +216,33 @@ export default {
     selectTicker(t) {
       this.selectedTicker = t
     },
+    invalidTickerName(t) {
+      console.log(t)
+      return t ? this.tickers.some(ticker => ticker.name === t) : this.tickers.some(ticker => ticker.name === this.ticker);
 
+    },
 
     addCard(t) {
       if (this.ticker.length === 0) {
         return
       }
-      if (this.validTickerName) {
+
+      if (this.invalidTickerName()) {
+        console.log("this shit work")
+        console.log("work")
+
+        this.tickerIsAlreadyExist = true
         return
       }
+
+      if (t && this.invalidTickerName(t)) {
+        console.log(this.invalidTickerName(t))
+        console.log("work")
+        this.ticker = t
+        this.tickerIsAlreadyExist = true
+        return
+      }
+
       const newTicker = {
         name: t || this.ticker,
         price: "-"
@@ -233,6 +251,7 @@ export default {
 
       this.tickers = [...this.tickers, newTicker]
 
+      this.tickerIsAlreadyExist = false
       this.ticker = ''
       this.filter = ''
       this.fuseData = []
